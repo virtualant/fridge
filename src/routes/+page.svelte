@@ -11,8 +11,16 @@
   let dragging = false;
   let overTrash = false;
   let dragIngredientId = null;
+  let optimistic = {}; // id -> optimistic values (overrides server data)
 
-  $: grouped = groupByCategory(data.ingredients);
+  $: grouped = groupByCategory(getEffectiveIngredients());
+
+  // Spaja server podatke s optimistic lokalnim promjenama
+  function getEffectiveIngredients() {
+    return data.ingredients.map(i =>
+      optimistic[i.id] ? { ...i, ...optimistic[i.id] } : i
+    );
+  }
 
   function groupByCategory(ingredients) {
     const map = new Map();
@@ -32,16 +40,21 @@
   }
 
   // Optimistic update: promijeni lokalno odmah, sinkroniziraj u pozadini.
-  // Bitno: kreiramo NOVI objekt (nova referenca) da Svelte prerenderira pill.
+  // Lokalni state overridea server podatke dok se fetch ne završi.
   function patchLocal(id, changes) {
-    data.ingredients = data.ingredients.map(i =>
-      i.id === id ? { ...i, ...changes } : i
-    );
+    optimistic[id] = changes;
+    optimistic = optimistic;
+
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(changes)
-    }).catch(() => invalidateAll());
+    })
+    .then(() => {
+      delete optimistic[id];
+      optimistic = optimistic;
+    })
+    .catch(() => invalidateAll());
   }
 
   function toggle(id) {

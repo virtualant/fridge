@@ -9,6 +9,7 @@
   let showAddModal = false;
   let editRecipe = null;
   let confirmDelete = null;
+  let optimistic = {}; // ingredientId -> new in_shopping_list value
 
   function deleteRecipe(id) {
     data.recipes = data.recipes.filter(r => r.id !== id);
@@ -23,19 +24,31 @@
     if (!current) return;
     const next = current.in_shopping_list ? 0 : 1;
 
-    // Nove reference (recept + sastojci) da RecipeCard odmah prerenderira.
-    data.recipes = data.recipes.map(r => ({
-      ...r,
-      ingredients: r.ingredients.map(i =>
-        i.id === ingredientId ? { ...i, in_shopping_list: next } : i
-      )
-    }));
+    optimistic[ingredientId] = next;
+    optimistic = optimistic;
 
     fetch(`/api/ingredients/${ingredientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_shopping_list: next })
-    }).catch(() => invalidateAll());
+    })
+    .then(() => {
+      delete optimistic[ingredientId];
+      optimistic = optimistic;
+    })
+    .catch(() => invalidateAll());
+  }
+
+  // Vraća recept sa optimistic vrijednostima za sastojke
+  function getEffectiveRecipe(recipe) {
+    return {
+      ...recipe,
+      ingredients: recipe.ingredients.map(i =>
+        optimistic[i.id] !== undefined
+          ? { ...i, in_shopping_list: optimistic[i.id] }
+          : i
+      )
+    };
   }
 </script>
 
@@ -50,7 +63,7 @@
     <div class="recipes-list">
       {#each data.recipes as recipe (recipe.id)}
         <RecipeCard
-          {recipe}
+          recipe={getEffectiveRecipe(recipe)}
           on:edit={() => editRecipe = recipe}
           on:delete={() => confirmDelete = recipe}
           on:shoppingtoggle={(e) => toggleShopping(e.detail)}

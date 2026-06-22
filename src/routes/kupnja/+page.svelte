@@ -3,22 +3,38 @@
 
   export let data;
 
+  let deleted = new Set(); // Set od ID-eva koji su obrisani (optimistic)
+
   function markBought(id) {
-    data.items = data.items.filter(i => i.id !== id);
+    deleted.add(id);
+    deleted = deleted;
+
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ has_it: true, in_shopping_list: false })
-    }).catch(() => invalidateAll());
+    })
+    .then(() => {
+      deleted.delete(id);
+      deleted = deleted;
+    })
+    .catch(() => invalidateAll());
   }
 
   function removeFromList(id) {
-    data.items = data.items.filter(i => i.id !== id);
+    deleted.add(id);
+    deleted = deleted;
+
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_shopping_list: false })
-    }).catch(() => invalidateAll());
+    })
+    .then(() => {
+      deleted.delete(id);
+      deleted = deleted;
+    })
+    .catch(() => invalidateAll());
   }
 </script>
 
@@ -32,7 +48,7 @@
   {:else}
     <p class="hint">Tapni ✓ kad kupiš, ili × za ukloniti s liste</p>
     <div class="items-list">
-      {#each data.items as item (item.id)}
+      {#each data.items.filter(i => !deleted.has(i.id)) as item (item.id)}
         <div class="shopping-item">
           <div class="item-info">
             <span class="item-emoji">{item.category_emoji || '📦'}</span>
