@@ -11,13 +11,8 @@
   let dragging = false;
   let overTrash = false;
   let dragIngredientId = null;
-  let optimistic = {}; // id -> optimistic values (overrides server data)
 
-  // Effective ingredients: server data + optimistic overrides
-  $: effective = data.ingredients.map(i =>
-    optimistic[i.id] ? { ...i, ...optimistic[i.id] } : i
-  );
-  $: grouped = groupByCategory(effective, data.categories);
+  $: grouped = groupByCategory(data.ingredients, data.categories);
 
   function groupByCategory(ingredients, categories) {
     const map = new Map();
@@ -36,37 +31,31 @@
     return [...map.values()].filter(g => g.items.length > 0);
   }
 
-  // Optimistic update: promijeni lokalno odmah, sinkroniziraj u pozadini.
-  // Lokalni state overridea server podatke dok se fetch ne završi.
-  function patchLocal(id, changes) {
-    optimistic[id] = changes;
-    optimistic = { ...optimistic };
-
-    fetch(`/api/ingredients/${id}`, {
+  async function toggle(id) {
+    const ing = data.ingredients.find(i => i.id === id);
+    if (!ing) return;
+    await fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(changes)
-    })
-    .then(() => {
-      delete optimistic[id];
-      optimistic = optimistic;
-    })
-    .catch(() => invalidateAll());
+      body: JSON.stringify({ has_it: !ing.has_it })
+    });
+    invalidateAll();
   }
 
-  function toggle(id) {
-    const ing = effective.find(i => i.id === id);
-    if (ing) patchLocal(id, { has_it: ing.has_it ? 0 : 1 });
+  async function toggleShopping(id) {
+    const ing = data.ingredients.find(i => i.id === id);
+    if (!ing) return;
+    await fetch(`/api/ingredients/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ in_shopping_list: !ing.in_shopping_list })
+    });
+    invalidateAll();
   }
 
-  function toggleShopping(id) {
-    const ing = effective.find(i => i.id === id);
-    if (ing) patchLocal(id, { in_shopping_list: ing.in_shopping_list ? 0 : 1 });
-  }
-
-  function deleteIngredient(id) {
-    data.ingredients = data.ingredients.filter(i => i.id !== id);
-    fetch(`/api/ingredients/${id}`, { method: 'DELETE' }).catch(() => invalidateAll());
+  async function deleteIngredient(id) {
+    await fetch(`/api/ingredients/${id}`, { method: 'DELETE' });
+    invalidateAll();
   }
 
   function onDragStart(id) {
@@ -78,10 +67,10 @@
     overTrash = isOver;
   }
 
-  function onDragEnd(id, dropped) {
+  async function onDragEnd(id, dropped) {
     dragging = false;
     overTrash = false;
-    if (dropped) deleteIngredient(id);
+    if (dropped) await deleteIngredient(id);
     dragIngredientId = null;
   }
 </script>

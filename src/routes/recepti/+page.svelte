@@ -9,45 +9,23 @@
   let showAddModal = false;
   let editRecipe = null;
   let confirmDelete = null;
-  let optimistic = {}; // ingredientId -> new in_shopping_list value
 
-  function deleteRecipe(id) {
-    data.recipes = data.recipes.filter(r => r.id !== id);
+  async function deleteRecipe(id) {
+    await fetch(`/api/recipes/${id}`, { method: 'DELETE' });
+    invalidateAll();
     confirmDelete = null;
-    fetch(`/api/recipes/${id}`, { method: 'DELETE' }).catch(() => invalidateAll());
   }
 
-  function toggleShopping(ingredientId) {
-    const current = effectiveRecipes
-      .flatMap(r => r.ingredients)
-      .find(i => i.id === ingredientId);
-    if (!current) return;
-    const next = current.in_shopping_list ? 0 : 1;
-
-    optimistic[ingredientId] = next;
-    optimistic = { ...optimistic };
-
-    fetch(`/api/ingredients/${ingredientId}`, {
+  async function toggleShopping(ingredientId) {
+    const ing = data.recipes.flatMap(r => r.ingredients).find(i => i.id === ingredientId);
+    if (!ing) return;
+    await fetch(`/api/ingredients/${ingredientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ in_shopping_list: next })
-    })
-    .then(() => {
-      delete optimistic[ingredientId];
-      optimistic = optimistic;
-    })
-    .catch(() => invalidateAll());
+      body: JSON.stringify({ in_shopping_list: !ing.in_shopping_list })
+    });
+    invalidateAll();
   }
-
-  // Recepti sa optimistic vrijednostima — reactive da Svelte prati optimistic
-  $: effectiveRecipes = data.recipes.map(r => ({
-    ...r,
-    ingredients: r.ingredients.map(i =>
-      optimistic[i.id] !== undefined
-        ? { ...i, in_shopping_list: optimistic[i.id] }
-        : i
-    )
-  }));
 </script>
 
 <div class="page">
@@ -59,7 +37,7 @@
     </div>
   {:else}
     <div class="recipes-list">
-      {#each effectiveRecipes as recipe (recipe.id)}
+      {#each data.recipes as recipe (recipe.id)}
         <RecipeCard
           {recipe}
           on:edit={() => editRecipe = recipe}
