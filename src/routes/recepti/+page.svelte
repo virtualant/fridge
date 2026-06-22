@@ -10,21 +10,29 @@
   let editRecipe = null;
   let confirmDelete = null;
 
-  async function deleteRecipe(id) {
-    await fetch(`/api/recipes/${id}`, { method: 'DELETE' });
-    invalidateAll();
+  function deleteRecipe(id) {
+    data.recipes = data.recipes.filter(r => r.id !== id);
     confirmDelete = null;
+    fetch(`/api/recipes/${id}`, { method: 'DELETE' }).catch(() => invalidateAll());
   }
 
-  async function toggleShopping(ingredientId) {
-    const ing = data.recipes.flatMap(r => r.ingredients).find(i => i.id === ingredientId);
-    if (!ing) return;
-    await fetch(`/api/ingredients/${ingredientId}`, {
+  function toggleShopping(ingredientId) {
+    let next = null;
+    for (const r of data.recipes) {
+      for (const ing of r.ingredients) {
+        if (ing.id === ingredientId) {
+          if (next === null) next = ing.in_shopping_list ? 0 : 1;
+          ing.in_shopping_list = next;
+        }
+      }
+    }
+    if (next === null) return;
+    data.recipes = data.recipes;
+    fetch(`/api/ingredients/${ingredientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ in_shopping_list: !ing.in_shopping_list })
-    });
-    invalidateAll();
+      body: JSON.stringify({ in_shopping_list: next })
+    }).catch(() => invalidateAll());
   }
 </script>
 

@@ -3,22 +3,22 @@
 
   export let data;
 
-  async function markBought(id) {
-    await fetch(`/api/ingredients/${id}`, {
+  function markBought(id) {
+    data.items = data.items.filter(i => i.id !== id);
+    fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ has_it: true, in_shopping_list: false })
-    });
-    invalidateAll();
+    }).catch(() => invalidateAll());
   }
 
-  async function removeFromList(id) {
-    await fetch(`/api/ingredients/${id}`, {
+  function removeFromList(id) {
+    data.items = data.items.filter(i => i.id !== id);
+    fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ in_shopping_list: false })
-    });
-    invalidateAll();
+    }).catch(() => invalidateAll());
   }
 </script>
 

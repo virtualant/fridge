@@ -31,29 +31,32 @@
     return [...map.values()].filter(g => g.items.length > 0);
   }
 
-  async function toggle(id) {
+  // Optimistic update: promijeni lokalno odmah, sinkroniziraj u pozadini.
+  function patchLocal(id, changes) {
     const ing = data.ingredients.find(i => i.id === id);
-    await fetch(`/api/ingredients/${id}`, {
+    if (!ing) return;
+    Object.assign(ing, changes);
+    data.ingredients = data.ingredients;
+    fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ has_it: !ing.has_it })
-    });
-    invalidateAll();
+      body: JSON.stringify(changes)
+    }).catch(() => invalidateAll());
   }
 
-  async function toggleShopping(id) {
+  function toggle(id) {
     const ing = data.ingredients.find(i => i.id === id);
-    await fetch(`/api/ingredients/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ in_shopping_list: !ing.in_shopping_list })
-    });
-    invalidateAll();
+    if (ing) patchLocal(id, { has_it: ing.has_it ? 0 : 1 });
   }
 
-  async function deleteIngredient(id) {
-    await fetch(`/api/ingredients/${id}`, { method: 'DELETE' });
-    invalidateAll();
+  function toggleShopping(id) {
+    const ing = data.ingredients.find(i => i.id === id);
+    if (ing) patchLocal(id, { in_shopping_list: ing.in_shopping_list ? 0 : 1 });
+  }
+
+  function deleteIngredient(id) {
+    data.ingredients = data.ingredients.filter(i => i.id !== id);
+    fetch(`/api/ingredients/${id}`, { method: 'DELETE' }).catch(() => invalidateAll());
   }
 
   function onDragStart(id) {
@@ -65,12 +68,10 @@
     overTrash = isOver;
   }
 
-  async function onDragEnd(id, dropped) {
+  function onDragEnd(id, dropped) {
     dragging = false;
     overTrash = false;
-    if (dropped) {
-      await deleteIngredient(id);
-    }
+    if (dropped) deleteIngredient(id);
     dragIngredientId = null;
   }
 </script>
