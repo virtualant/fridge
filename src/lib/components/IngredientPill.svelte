@@ -55,8 +55,12 @@
     }
   }
 
-  function onTouchEnd() {
+  function onTouchEnd(e) {
     clearTimeout(timer);
+
+    // Spriječi synthetic click event koji slijedi nakon touchend
+    if (e?.cancelable) e.preventDefault();
+    suppressClick = true;
 
     if (isDragging) {
       dispatch('dragend', { dropped: overTrash });

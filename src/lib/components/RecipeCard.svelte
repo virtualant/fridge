@@ -43,7 +43,11 @@
 
   // Touch handlers
   function onIngTouchStart(e, ing) { ingPressStart(ing, e.touches[0].clientX, e.touches[0].clientY); }
-  function onIngTouchEnd(e, ing) { ingPressEnd(ing); ingClick(ing); }
+  function onIngTouchEnd(e, ing) {
+    if (e.cancelable) e.preventDefault();
+    ingPressEnd(ing);
+    ingClick(ing);
+  }
 
   // Mouse handlers
   function onIngMouseDown(e, ing) { if (e.button === 0) ingPressStart(ing); }
