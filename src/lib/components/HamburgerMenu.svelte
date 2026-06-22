@@ -3,13 +3,13 @@
   import { page } from '$app/stores';
   import { invalidateAll } from '$app/navigation';
   import AddIngredientModal from './AddIngredientModal.svelte';
-  import AddCategoryModal from './AddCategoryModal.svelte';
+  import CategoryManagerModal from './CategoryManagerModal.svelte';
 
   export let open = false;
   export let categories = [];
 
   let showAddIngredient = false;
-  let showAddCategory = false;
+  let showCategories = false;
 
   function navigate(path) {
     open = false;
@@ -56,9 +56,9 @@
         <span class="nav-emoji">➕</span>
         Nova namirnica
       </button>
-      <button class="nav-item" on:click={() => { open = false; showAddCategory = true; }}>
+      <button class="nav-item" on:click={() => { open = false; showCategories = true; }}>
         <span class="nav-emoji">🗂️</span>
-        Nova kategorija
+        Upravljanje kategorijama
       </button>
     </div>
   </nav>
@@ -70,9 +70,10 @@
   on:added={() => invalidateAll()}
 />
 
-<AddCategoryModal
-  bind:open={showAddCategory}
-  on:added={() => invalidateAll()}
+<CategoryManagerModal
+  bind:open={showCategories}
+  {categories}
+  on:changed={() => invalidateAll()}
 />
 
 <style>

@@ -47,12 +47,10 @@ if (!globalThis.__db) {
   const count = db.prepare('SELECT COUNT(*) as n FROM categories').get();
   if (count.n === 0) {
     const insert = db.prepare('INSERT INTO categories (name, emoji, color) VALUES (?, ?, ?)');
-    insert.run('Mliječni', '🧀', COLORS[0]);
-    insert.run('Meso', '🥩', COLORS[1]);
-    insert.run('Povrće', '🥦', COLORS[2]);
-    insert.run('Voće', '🍎', COLORS[3]);
-    insert.run('Pića', '🥤', COLORS[4]);
-    insert.run('Ostalo', '🥫', COLORS[5]);
+    insert.run('Voće', '🍎', COLORS[0]);
+    insert.run('Povrće', '🥦', COLORS[1]);
+    insert.run('Pića', '🥤', COLORS[2]);
+    insert.run('Ostalo', '🥫', COLORS[3]);
   }
 
   globalThis.__db = db;

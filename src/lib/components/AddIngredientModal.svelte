@@ -71,7 +71,7 @@
       <label>Naziv</label>
       <input
         bind:value={name}
-        placeholder="npr. Mlijeko, Jaja, Jogurt..."
+        placeholder="Banana, Mrkva, Jabuka..."
         on:keydown={e => e.key === 'Enter' && submit()}
         autofocus
       />
