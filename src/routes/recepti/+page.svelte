@@ -18,7 +18,7 @@
   }
 
   function toggleShopping(ingredientId) {
-    const current = data.recipes
+    const current = effectiveRecipes
       .flatMap(r => r.ingredients)
       .find(i => i.id === ingredientId);
     if (!current) return;
@@ -39,17 +39,15 @@
     .catch(() => invalidateAll());
   }
 
-  // Vraća recept sa optimistic vrijednostima za sastojke
-  function getEffectiveRecipe(recipe) {
-    return {
-      ...recipe,
-      ingredients: recipe.ingredients.map(i =>
-        optimistic[i.id] !== undefined
-          ? { ...i, in_shopping_list: optimistic[i.id] }
-          : i
-      )
-    };
-  }
+  // Recepti sa optimistic vrijednostima — reactive da Svelte prati optimistic
+  $: effectiveRecipes = data.recipes.map(r => ({
+    ...r,
+    ingredients: r.ingredients.map(i =>
+      optimistic[i.id] !== undefined
+        ? { ...i, in_shopping_list: optimistic[i.id] }
+        : i
+    )
+  }));
 </script>
 
 <div class="page">
@@ -61,9 +59,9 @@
     </div>
   {:else}
     <div class="recipes-list">
-      {#each data.recipes as recipe (recipe.id)}
+      {#each effectiveRecipes as recipe (recipe.id)}
         <RecipeCard
-          recipe={getEffectiveRecipe(recipe)}
+          {recipe}
           on:edit={() => editRecipe = recipe}
           on:delete={() => confirmDelete = recipe}
           on:shoppingtoggle={(e) => toggleShopping(e.detail)}

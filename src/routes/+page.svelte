@@ -13,20 +13,17 @@
   let dragIngredientId = null;
   let optimistic = {}; // id -> optimistic values (overrides server data)
 
-  $: grouped = groupByCategory(getEffectiveIngredients());
+  // Effective ingredients: server data + optimistic overrides
+  $: effective = data.ingredients.map(i =>
+    optimistic[i.id] ? { ...i, ...optimistic[i.id] } : i
+  );
+  $: grouped = groupByCategory(effective, data.categories);
 
-  // Spaja server podatke s optimistic lokalnim promjenama
-  function getEffectiveIngredients() {
-    return data.ingredients.map(i =>
-      optimistic[i.id] ? { ...i, ...optimistic[i.id] } : i
-    );
-  }
-
-  function groupByCategory(ingredients) {
+  function groupByCategory(ingredients, categories) {
     const map = new Map();
     map.set(null, { name: 'Bez kategorije', emoji: '📦', color: '#f0f0f0', items: [] });
 
-    for (const cat of data.categories) {
+    for (const cat of categories) {
       map.set(cat.id, { name: cat.name, emoji: cat.emoji, color: cat.color, items: [] });
     }
 
@@ -58,12 +55,12 @@
   }
 
   function toggle(id) {
-    const ing = data.ingredients.find(i => i.id === id);
+    const ing = effective.find(i => i.id === id);
     if (ing) patchLocal(id, { has_it: ing.has_it ? 0 : 1 });
   }
 
   function toggleShopping(id) {
-    const ing = data.ingredients.find(i => i.id === id);
+    const ing = effective.find(i => i.id === id);
     if (ing) patchLocal(id, { in_shopping_list: ing.in_shopping_list ? 0 : 1 });
   }
 

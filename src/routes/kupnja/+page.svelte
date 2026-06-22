@@ -3,7 +3,9 @@
 
   export let data;
 
-  let deleted = new Set(); // Set od ID-eva koji su obrisani (optimistic)
+  let deleted = new Set();
+
+  $: visibleItems = data.items.filter(i => !deleted.has(i.id));
 
   function markBought(id) {
     deleted.add(id);
@@ -16,14 +18,14 @@
     })
     .then(() => {
       deleted.delete(id);
-      deleted = deleted;
+      deleted = new Set(deleted);
     })
     .catch(() => invalidateAll());
   }
 
   function removeFromList(id) {
     deleted.add(id);
-    deleted = deleted;
+    deleted = new Set(deleted);
 
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
@@ -32,7 +34,7 @@
     })
     .then(() => {
       deleted.delete(id);
-      deleted = deleted;
+      deleted = new Set(deleted);
     })
     .catch(() => invalidateAll());
   }
@@ -48,7 +50,7 @@
   {:else}
     <p class="hint">Tapni ✓ kad kupiš, ili × za ukloniti s liste</p>
     <div class="items-list">
-      {#each data.items.filter(i => !deleted.has(i.id)) as item (item.id)}
+      {#each visibleItems as item (item.id)}
         <div class="shopping-item">
           <div class="item-info">
             <span class="item-emoji">{item.category_emoji || '📦'}</span>
