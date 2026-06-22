@@ -32,11 +32,11 @@
   }
 
   // Optimistic update: promijeni lokalno odmah, sinkroniziraj u pozadini.
+  // Bitno: kreiramo NOVI objekt (nova referenca) da Svelte prerenderira pill.
   function patchLocal(id, changes) {
-    const ing = data.ingredients.find(i => i.id === id);
-    if (!ing) return;
-    Object.assign(ing, changes);
-    data.ingredients = data.ingredients;
+    data.ingredients = data.ingredients.map(i =>
+      i.id === id ? { ...i, ...changes } : i
+    );
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

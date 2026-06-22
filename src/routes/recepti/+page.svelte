@@ -17,17 +17,20 @@
   }
 
   function toggleShopping(ingredientId) {
-    let next = null;
-    for (const r of data.recipes) {
-      for (const ing of r.ingredients) {
-        if (ing.id === ingredientId) {
-          if (next === null) next = ing.in_shopping_list ? 0 : 1;
-          ing.in_shopping_list = next;
-        }
-      }
-    }
-    if (next === null) return;
-    data.recipes = data.recipes;
+    const current = data.recipes
+      .flatMap(r => r.ingredients)
+      .find(i => i.id === ingredientId);
+    if (!current) return;
+    const next = current.in_shopping_list ? 0 : 1;
+
+    // Nove reference (recept + sastojci) da RecipeCard odmah prerenderira.
+    data.recipes = data.recipes.map(r => ({
+      ...r,
+      ingredients: r.ingredients.map(i =>
+        i.id === ingredientId ? { ...i, in_shopping_list: next } : i
+      )
+    }));
+
     fetch(`/api/ingredients/${ingredientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
