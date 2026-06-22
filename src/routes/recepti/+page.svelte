@@ -25,7 +25,7 @@
     const next = current.in_shopping_list ? 0 : 1;
 
     optimistic[ingredientId] = next;
-    optimistic = optimistic;
+    optimistic = { ...optimistic };
 
     fetch(`/api/ingredients/${ingredientId}`, {
       method: 'PATCH',

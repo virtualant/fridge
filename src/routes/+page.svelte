@@ -43,7 +43,7 @@
   // Lokalni state overridea server podatke dok se fetch ne završi.
   function patchLocal(id, changes) {
     optimistic[id] = changes;
-    optimistic = optimistic;
+    optimistic = { ...optimistic };
 
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',

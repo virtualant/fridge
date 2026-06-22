@@ -7,7 +7,7 @@
 
   function markBought(id) {
     deleted.add(id);
-    deleted = deleted;
+    deleted = new Set(deleted);
 
     fetch(`/api/ingredients/${id}`, {
       method: 'PATCH',
