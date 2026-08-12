@@ -16,10 +16,15 @@
   let error = '';
   let showAddIngredient = false;
 
-  $: if (open && existing) {
-    name = existing.name;
-    description = existing.description || '';
-    selectedIds = new Set(existing.ingredients.map(i => i.id));
+  // Prepopulaj polja SAMO jednom, kad se modal otvori (open false → true).
+  let wasOpen = false;
+  $: {
+    if (open && !wasOpen && existing) {
+      name = existing.name;
+      description = existing.description || '';
+      selectedIds = new Set(existing.ingredients.map(i => i.id));
+    }
+    wasOpen = open;
   }
 
   $: filtered = ingredients.filter(i =>
