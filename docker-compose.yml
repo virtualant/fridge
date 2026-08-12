@@ -10,6 +10,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATA_DIR=/app/data
+      - AUTH_USER=${AUTH_USER:-4nt}
+      - AUTH_PASS=${AUTH_PASS:-Jure006jur123#}
 
   cloudflared:
     image: cloudflare/cloudflared:latest

@@ -18,6 +18,11 @@
 
   function close() { open = false; }
 
+  async function logout() {
+    await fetch('/api/login', { method: 'DELETE' });
+    window.location.href = '/login';
+  }
+
   const navItems = [
     { path: '/', label: 'Frižider', emoji: '🧊' },
     { path: '/recepti', label: 'Recepti', emoji: '👨‍🍳' },
@@ -59,6 +64,13 @@
       <button class="nav-item" on:click={() => { open = false; showCategories = true; }}>
         <span class="nav-emoji">🗂️</span>
         Upravljanje kategorijama
+      </button>
+    </div>
+
+    <div class="drawer-section">
+      <button class="nav-item logout" on:click={logout}>
+        <span class="nav-emoji">🚪</span>
+        Odjava
       </button>
     </div>
   </nav>
@@ -166,4 +178,6 @@
   }
 
   .nav-emoji { font-size: 20px; width: 28px; text-align: center; }
+
+  .nav-item.logout { color: var(--danger); }
 </style>
