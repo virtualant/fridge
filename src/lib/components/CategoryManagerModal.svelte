@@ -8,6 +8,7 @@
   export let categories = [];
 
   let showAddCat = false;
+  let editCat = null;
   let confirmDelete = null;
 
   async function refresh() {
@@ -46,7 +47,10 @@
             <div class="cat-row" style="background:{cat.color}25">
               <span class="cat-emoji">{cat.emoji}</span>
               <span class="cat-name">{cat.name}</span>
-              <button class="del-btn" on:click={() => confirmDelete = cat} title="Obriši">
+              <button class="icon-btn" on:click={() => editCat = cat} title="Uredi">
+                ✏️
+              </button>
+              <button class="icon-btn" on:click={() => confirmDelete = cat} title="Obriši">
                 🗑️
               </button>
             </div>
@@ -66,6 +70,13 @@
 {/if}
 
 <AddCategoryModal bind:open={showAddCat} on:added={refresh} />
+
+<AddCategoryModal
+  open={!!editCat}
+  existing={editCat}
+  on:added={() => { refresh(); editCat = null; }}
+  on:close={() => editCat = null}
+/>
 
 {#if confirmDelete}
   <ConfirmModal
@@ -99,7 +110,7 @@
     font-weight: 600;
   }
 
-  .del-btn {
+  .icon-btn {
     font-size: 18px;
     padding: 6px;
     border-radius: 8px;
@@ -107,7 +118,7 @@
     transition: opacity 0.15s;
   }
 
-  .del-btn:active { opacity: 1; }
+  .icon-btn:active { opacity: 1; }
 
   .add-cat-btn {
     display: block;

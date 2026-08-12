@@ -3,24 +3,55 @@
   const dispatch = createEventDispatcher();
 
   export let open = false;
+  export let existing = null;
 
   let name = '';
   let emoji = '📦';
   let loading = false;
   let error = '';
 
-  const EMOJI_OPTIONS = ['📦','🧀','🥩','🐟','🥦','🍎','🥤','🥫','🌿','🍞','🥚','🧂','🍋','🧅','🧄','🫙','🍯','🧈','🫒','🌶️'];
+  const EMOJI_OPTIONS = [
+    // Opće
+    '📦','🍽️','🥣','🧂','🧊','🧻',
+    // Mliječni
+    '🧀','🥛','🧈','🍦',
+    // Meso, riba
+    '🥩','🍗','🥓','🍖','🐟','🦐','🦑','🐙',
+    // Povrće
+    '🥦','🥬','🥕','🌽','🥔','🍅','🧅','🧄','🫑','🥒','🍆','🌶️','🫒','🍄','🥑',
+    // Voće
+    '🍎','🍏','🍌','🍇','🍓','🫐','🍉','🍊','🍋','🥝','🍑','🍒','🍍','🥭','🥥','🍐',
+    // Žitarice, kruh
+    '🍞','🥐','🥖','🥨','🥯','🌾','🍚','🍜','🍝','🌮','🌯',
+    // Jaja, umaci
+    '🥚','🍯','🫙','🥫','🧴','🫗',
+    // Pića
+    '🥤','☕','🍵','🧃','🍷','🍺','🍶','🥂','🍾','💧',
+    // Slatko
+    '🍫','🍬','🍭','🍩','🍪','🎂','🧁','🍰',
+    // Zamrznuto, ostalo
+    '🍕','🍔','🌭','🥪','🌿','🥜','🫘'
+  ];
 
-  function reset() {
-    name = '';
-    emoji = '📦';
-    error = '';
-    loading = false;
+  let wasOpen = false;
+  $: {
+    if (open && !wasOpen) {
+      if (existing) {
+        name = existing.name;
+        emoji = existing.emoji;
+      } else {
+        name = '';
+        emoji = '📦';
+      }
+      error = '';
+      loading = false;
+    }
+    wasOpen = open;
   }
 
   function close() {
-    reset();
     open = false;
+    dispatch('close');
   }
 
   async function submit() {
@@ -28,8 +59,10 @@
     loading = true;
     error = '';
     try {
-      const res = await fetch('/api/categories', {
-        method: 'POST',
+      const url = existing ? `/api/categories/${existing.id}` : '/api/categories';
+      const method = existing ? 'PATCH' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), emoji })
       });
@@ -49,19 +82,17 @@
 </script>
 
 {#if open}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
   <div class="modal-backdrop" on:click={onBackdrop}>
     <div class="modal-sheet">
       <div class="modal-handle"></div>
-      <div class="modal-title">Nova kategorija</div>
+      <div class="modal-title">{existing ? 'Uredi kategoriju' : 'Nova kategorija'}</div>
 
       <label>Naziv</label>
       <input
         bind:value={name}
         placeholder="npr. Mliječni proizvodi"
         on:keydown={e => e.key === 'Enter' && submit()}
-        autofocus
       />
 
       <label>Ikonica</label>
@@ -80,7 +111,7 @@
       <div class="modal-actions">
         <button class="btn btn-secondary" on:click={close}>Odustani</button>
         <button class="btn btn-primary" on:click={submit} disabled={loading}>
-          {loading ? '...' : 'Spremi'}
+          {loading ? '...' : existing ? 'Spremi izmjene' : 'Spremi'}
         </button>
       </div>
     </div>
@@ -89,15 +120,17 @@
 
 <style>
   .emoji-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 6px;
     margin-top: 4px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 4px 2px;
   }
 
   .emoji-btn {
-    width: 42px;
-    height: 42px;
+    aspect-ratio: 1;
     font-size: 22px;
     border-radius: var(--radius-sm);
     border: 2px solid transparent;
