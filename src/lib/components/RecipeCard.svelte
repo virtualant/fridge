@@ -39,6 +39,7 @@
 
   function ingClick(ing) {
     if (suppressIngClick[ing.id]) { suppressIngClick[ing.id] = false; return; }
+    dispatch('havetoggle', ing.id);
   }
 
   // Touch handlers
@@ -73,7 +74,7 @@
 
   {#if expanded && recipe.ingredients.length > 0}
     <div class="ingredients-list">
-      <p class="ing-hint">Drži za dodati na listu kupnje</p>
+      <p class="ing-hint">Tapni: imam/nemam · Drži: lista kupnje</p>
       {#each recipe.ingredients as ing (ing.id)}
         <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
         <span

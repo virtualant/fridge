@@ -26,6 +26,17 @@
     });
     invalidateAll();
   }
+
+  async function toggleHave(ingredientId) {
+    const ing = data.recipes.flatMap(r => r.ingredients).find(i => i.id === ingredientId);
+    if (!ing) return;
+    await fetch(`/api/ingredients/${ingredientId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ has_it: !ing.has_it })
+    });
+    invalidateAll();
+  }
 </script>
 
 <div class="page">
@@ -43,6 +54,7 @@
           on:edit={() => editRecipe = recipe}
           on:delete={() => confirmDelete = recipe}
           on:shoppingtoggle={(e) => toggleShopping(e.detail)}
+          on:havetoggle={(e) => toggleHave(e.detail)}
         />
       {/each}
     </div>
